@@ -1,92 +1,149 @@
-# Dev-Kit
+# Dev Kit
 
+一个面向 Codex 与 Claude 的开发工具箱仓库。
 
+它不是 `skills.sh` 风格的纯 skill 仓库，而是一个统一分发源，后续可以同时承载：
 
-## Getting started
+- `skills/`
+- `commands/`
+- `rules/`
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+并通过自带 CLI 安装到不同宿主目录。
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## 当前内容
 
-## Add your files
+- `skills/git`
+- `skills/git-commit`
+- `skills/shadcn-vue`
+- `skills/export-rules`
+- `skills/file-naming`
+- `skills/import-rules`
+- `skills/scss-nesting`
+- `skills/vue-page-structure`
+- `skills/vue3-vue-file-template`
+- `commands/git`
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+其中：
 
+- `git` 提供 Git 工作流与常见命令聚合入口
+- `git-commit` 提供独立的中文 Conventional Commits 提交信息生成能力
+- 一组前端规范类 skill 来自 `jieci0825/skills` 的 `standards/*`
+
+## Skill 定位
+
+### git
+
+适合所有泛 Git 场景，偏“总入口”：
+
+- 分支策略
+- rebase / stash / undo / conflict
+- 常见 Git 命令速查
+- Git 提交规范入口
+
+如果你不确定该用哪个 Git skill，默认用 `git`。
+
+### git-commit
+
+适合单一高频场景，偏“专精工具”：
+
+- 根据当前改动生成提交信息
+- 输出中文 Conventional Commits 标题
+- 在需要时补充 2 到 5 条中文变更说明
+
+如果用户明确是在问“帮我写 commit message”，优先用 `git-commit`。
+
+## 安装
+
+主入口：
+
+```bash
+pnpm dlx dev-kit install
 ```
-cd existing_repo
-git remote add origin https://git.newcapec.cn/02-newcapec/ai/UIService/helper/dev-kit.git
-git branch -M main
-git push -uf origin main
+
+也支持从 Git 直接执行，只要包入口能被 `pnpm dlx` 拉起即可。
+
+## 安装行为
+
+默认行为：
+
+- 同时安装到 `codex` 和 `claude`
+- 默认安装到全局目录
+- 默认安装 `skills + commands + rules`
+- 默认使用软链接
+- 目标已存在时直接覆盖
+
+## 常用命令
+
+安装全部内容到全局：
+
+```bash
+pnpm dlx dev-kit install
 ```
 
-## Integrate with your tools
+只安装 skills：
 
-- [ ] [Set up project integrations](https://git.newcapec.cn/02-newcapec/ai/UIService/helper/dev-kit/-/settings/integrations)
+```bash
+pnpm dlx dev-kit install --types skills
+```
 
-## Collaborate with your team
+只安装到 Codex：
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+```bash
+pnpm dlx dev-kit install --agent codex
+```
 
-## Test and Deploy
+安装到当前项目：
 
-Use the built-in continuous integration in GitLab.
+```bash
+pnpm dlx dev-kit install --scope project
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+强制复制而不是软链接：
 
-***
+```bash
+pnpm dlx dev-kit install --mode copy
+```
 
-# Editing this README
+## 目标目录
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+全局安装：
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+- Codex
+  - `~/.codex/skills`
+  - `~/.codex/commands`
+  - `~/.codex/rules`
+- Claude
+  - `~/.claude/skills`
+  - `~/.claude/commands`
+  - `~/.claude/rules`
 
-## Name
-Choose a self-explaining name for your project.
+项目安装：
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+- Codex
+  - `.agents/skills`
+  - `.codex/commands`
+  - `rules`
+- Claude
+  - `.claude/skills`
+  - `.claude/commands`
+  - `rules`
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## 仓库结构
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```text
+.
+├── bin/          # CLI 入口
+├── src/          # 安装器实现
+├── skills/       # 可分发 skill 资产
+├── commands/     # 可分发 command 资产
+├── rules/        # 可分发 rule 资产
+└── tests/        # 内置测试
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## 开发
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+运行测试：
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+```bash
+pnpm test
+```
