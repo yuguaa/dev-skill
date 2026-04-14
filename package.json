@@ -1,6 +1,6 @@
 {
   "name": "@yugu/dev-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Custom installer for @yugu/dev-kit assets across Codex and Claude.",
   "type": "module",
   "bin": {
