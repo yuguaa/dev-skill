@@ -1,18 +1,6 @@
 import os from "node:os";
 import path from "node:path";
-
-const GLOBAL_TARGETS = {
-  codex: {
-    skills: path.join(os.homedir(), ".codex", "skills"),
-    commands: path.join(os.homedir(), ".codex", "commands"),
-    rules: path.join(os.homedir(), ".codex", "rules"),
-  },
-  claude: {
-    skills: path.join(os.homedir(), ".claude", "skills"),
-    commands: path.join(os.homedir(), ".claude", "commands"),
-    rules: path.join(os.homedir(), ".claude", "rules"),
-  },
-};
+import { listAssetKinds } from "./asset-kinds.js";
 
 export function resolveAgents(agentOption) {
   if (agentOption === "all") {
@@ -23,21 +11,12 @@ export function resolveAgents(agentOption) {
 }
 
 export function resolveTargetRoots({ agent, scope, projectRoot }) {
-  if (scope === "global") {
-    return GLOBAL_TARGETS[agent];
-  }
-
-  if (agent === "codex") {
-    return {
-      skills: path.join(projectRoot, ".agents", "skills"),
-      commands: path.join(projectRoot, ".codex", "commands"),
-      rules: path.join(projectRoot, "rules"),
-    };
-  }
-
-  return {
-    skills: path.join(projectRoot, ".claude", "skills"),
-    commands: path.join(projectRoot, ".claude", "commands"),
-    rules: path.join(projectRoot, "rules"),
-  };
+  return Object.fromEntries(
+    listAssetKinds().map((kind) => {
+      const segments = kind.targets[scope][agent];
+      const rootPath =
+        scope === "global" ? path.join(os.homedir(), ...segments) : path.join(projectRoot, ...segments);
+      return [kind.name, rootPath];
+    }),
+  );
 }

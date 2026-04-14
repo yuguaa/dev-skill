@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { listAssetKindNames } from "./asset-kinds.js";
 import { buildManifest } from "./manifest.js";
 import { resolveAgents, resolveTargetRoots } from "./targets.js";
 
@@ -79,13 +80,10 @@ function buildInstallPlan({ manifest, agents, scope, projectRoot, types }) {
 
 function createSummary(operations, mode, scope, agents) {
   const summary = new Map();
+  const assetKinds = listAssetKindNames();
 
   for (const agent of agents) {
-    summary.set(agent, {
-      skills: 0,
-      commands: 0,
-      rules: 0,
-    });
+    summary.set(agent, Object.fromEntries(assetKinds.map((kind) => [kind, 0])));
   }
 
   for (const operation of operations) {

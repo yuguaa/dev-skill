@@ -32,6 +32,9 @@
 pnpm dlx @yugu/dev-kit install
 ```
 
+如果是在终端里手动执行，`install` 现在会默认进入交互式向导，
+直接回车即可使用默认值。
+
 也支持从 Git 直接执行，只要包入口能被 `pnpm dlx` 拉起即可。
 
 ## 安装行为
@@ -51,6 +54,14 @@ pnpm dlx @yugu/dev-kit install
 ```bash
 pnpm dlx @yugu/dev-kit install
 ```
+
+交互式安装：
+
+```bash
+dev-kit install
+```
+
+如果你是在脚本里调用，或者已经明确知道参数，也可以继续使用显式参数：
 
 只安装 skills：
 
@@ -75,6 +86,25 @@ pnpm dlx @yugu/dev-kit install --scope project
 ```bash
 pnpm dlx @yugu/dev-kit install --mode copy
 ```
+
+从 Git tree 链接安装单个目录资产：
+
+```bash
+pnpm dlx @yugu/dev-kit install --git \
+  https://git.newcapec.cn/02-newcapec/ai/UIService/helper/dev-kit/-/tree/main/skills/export-rules
+```
+
+也支持安装 `rules/...` 或 `commands/...` 目录，资产类型会从链接路径自动推导。
+
+Git 安装规则：
+
+- 只支持 GitLab `/-/tree/<ref>/<path>` 和 GitHub `/tree/<ref>/<path>` 链接
+- 路径必须位于 `skills/`、`commands/` 或 `rules/` 下
+- 传入 `--git` 后，不再允许额外传 `--types`
+- `--source` 现在只支持 `auto`、`package`、`git`
+- `auto` 会在传入 `--git` 时自动切到 Git 来源，否则使用当前安装包内容
+- `skills` 目录下必须存在 `SKILL.md`
+- `commands` 和 `rules` 目录下必须至少存在一个可分发的 `.md` 文件
 
 ## 目标目录
 

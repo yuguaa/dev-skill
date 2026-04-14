@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { listAssetKinds } from "./asset-kinds.js";
 
 async function exists(targetPath) {
   try {
@@ -36,55 +37,49 @@ async function walkMarkdownFiles(rootPath) {
 }
 
 export async function buildManifest(sourceRoot) {
-  const manifest = {
-    skills: [],
-    commands: [],
-    rules: [],
-  };
+  const manifest = Object.fromEntries(listAssetKinds().map((kind) => [kind.name, []]));
 
-  const skillsRoot = path.join(sourceRoot, "skills");
+  for (const kind of listAssetKinds()) {
+    const assetRoot = path.join(sourceRoot, kind.sourceDir);
 
-  if (await exists(skillsRoot)) {
-    const skillEntries = await fs.readdir(skillsRoot, { withFileTypes: true });
-
-    for (const entry of skillEntries) {
-      if (!entry.isDirectory()) {
+    if (kind.entryStrategy === "directory-with-marker") {
+      if (!(await exists(assetRoot))) {
         continue;
       }
 
-      const skillPath = path.join(skillsRoot, entry.name);
-      const skillDefinition = path.join(skillPath, "SKILL.md");
+      const entries = await fs.readdir(assetRoot, { withFileTypes: true });
 
-      if (!(await exists(skillDefinition))) {
-        continue;
+      for (const entry of entries) {
+        if (!entry.isDirectory()) {
+          continue;
+        }
+
+        const entryPath = path.join(assetRoot, entry.name);
+        const markerPath = path.join(entryPath, kind.markerFile);
+
+        if (!(await exists(markerPath))) {
+          continue;
+        }
+
+        manifest[kind.name].push({
+          name: entry.name,
+          type: kind.name,
+          sourcePath: entryPath,
+          relativePath: entry.name,
+        });
       }
 
-      manifest.skills.push({
-        name: entry.name,
-        type: "skills",
-        sourcePath: skillPath,
-        relativePath: entry.name,
-      });
+      continue;
     }
+
+    const markdownFiles = await walkMarkdownFiles(assetRoot);
+    manifest[kind.name] = markdownFiles.map((filePath) => ({
+      name: path.basename(filePath, ".md"),
+      type: kind.name,
+      sourcePath: filePath,
+      relativePath: path.relative(assetRoot, filePath),
+    }));
   }
-
-  const commandsRoot = path.join(sourceRoot, "commands");
-  const commandFiles = await walkMarkdownFiles(commandsRoot);
-  manifest.commands = commandFiles.map((filePath) => ({
-    name: path.basename(filePath, ".md"),
-    type: "commands",
-    sourcePath: filePath,
-    relativePath: path.relative(commandsRoot, filePath),
-  }));
-
-  const rulesRoot = path.join(sourceRoot, "rules");
-  const ruleFiles = await walkMarkdownFiles(rulesRoot);
-  manifest.rules = ruleFiles.map((filePath) => ({
-    name: path.basename(filePath, ".md"),
-    type: "rules",
-    sourcePath: filePath,
-    relativePath: path.relative(rulesRoot, filePath),
-  }));
 
   return manifest;
 }

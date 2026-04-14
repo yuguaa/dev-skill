@@ -1,34 +1,52 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { getDefaultTypesOption, hasAssetKind, listAssetKindNames } from "./asset-kinds.js";
 import { runInstall } from "./installer.js";
+import { promptInstallOptions } from "./prompts.js";
+import { resolveInstallSource } from "./source-resolver.js";
 
 const VALID_AGENTS = new Set(["codex", "claude"]);
 const VALID_SCOPES = new Set(["global", "project"]);
 const VALID_MODES = new Set(["symlink", "copy"]);
-const VALID_TYPES = new Set(["skills", "commands", "rules"]);
-const VALID_SOURCES = new Set(["auto", "local", "git", "npm"]);
-const SUPPORTED_OPTIONS = new Set(["agent", "scope", "types", "mode", "source"]);
+const VALID_SOURCES = new Set(["auto", "package", "git"]);
+const SUPPORTED_OPTIONS = new Set(["agent", "scope", "types", "mode", "source", "git"]);
 
 function packageRootFromModule() {
   const currentFile = fileURLToPath(import.meta.url);
   return path.resolve(path.dirname(currentFile), "..");
 }
 
-function printHelp() {
-  console.log(`@yugu/dev-kit
+function writeLine(output, message = "") {
+  output.write(`${message}\n`);
+}
+
+function isInteractiveTerminal(input, output) {
+  return Boolean(input?.isTTY && output?.isTTY);
+}
+
+function printHelp(output) {
+  const assetKinds = listAssetKindNames().join(",");
+  writeLine(
+    output,
+    `@yugu/dev-kit
 
 Usage:
   pnpm dlx @yugu/dev-kit install [options]
   dev-kit install [options]
 
+Interactive:
+  dev-kit install              # TTY 下默认进入交互式安装
+
 Options:
   --agent <all|codex|claude|codex,claude>
   --scope <global|project>
-  --types <skills,commands,rules>
+  --types <${assetKinds}>
   --mode <symlink|copy>
-  --source <auto|local|git|npm>
+  --source <auto|package|git>
+  --git <tree-url>
   --help
-`);
+`,
+  );
 }
 
 function parseArgs(argv) {
@@ -41,10 +59,13 @@ function parseArgs(argv) {
   const options = {
     agent: "all",
     scope: "global",
-    types: "skills,commands,rules",
+    types: getDefaultTypesOption(),
     mode: "symlink",
     source: "auto",
+    git: undefined,
   };
+  let hasExplicitOptions = false;
+  const explicitOptions = new Set();
 
   for (let index = 0; index < rest.length; index += 1) {
     const token = rest[index];
@@ -69,13 +90,15 @@ function parseArgs(argv) {
     }
 
     options[optionName] = value;
+    hasExplicitOptions = true;
+    explicitOptions.add(optionName);
     index += 1;
   }
 
-  return { command, options };
+  return { command, options, hasExplicitOptions, explicitOptions };
 }
 
-function validateOptions(options) {
+function validateOptions(options, explicitOptions = new Set()) {
   const agents =
     options.agent === "all"
       ? ["codex", "claude"]
@@ -95,32 +118,63 @@ function validateOptions(options) {
 
   const types = options.types.split(",").map((item) => item.trim()).filter(Boolean);
 
-  if (types.length === 0 || types.some((item) => !VALID_TYPES.has(item))) {
+  if (types.length === 0 || types.some((item) => !hasAssetKind(item))) {
     throw new Error(`Invalid --types: ${options.types}`);
   }
 
   if (!VALID_SOURCES.has(options.source)) {
     throw new Error(`Invalid --source: ${options.source}`);
   }
-}
 
-function printSummary(result) {
-  console.log(`Install completed
-Scope: ${result.summary.scope}
-Mode: ${result.summary.mode}`);
+  if (options.git && explicitOptions.has("types")) {
+    throw new Error(`--git cannot be combined with --types, asset kind is derived from the Git path`);
+  }
 
-  for (const [agent, counts] of Object.entries(result.summary.agents)) {
-    console.log(
-      `- ${agent}: skills(${counts.skills}), commands(${counts.commands}), rules(${counts.rules})`,
-    );
+  if (options.git && explicitOptions.has("source") && !["auto", "git"].includes(options.source)) {
+    throw new Error(`--git cannot be combined with --source ${options.source}`);
+  }
+
+  if (options.source === "git" && !options.git) {
+    throw new Error(`--source git requires --git <tree-url>`);
+  }
+
+  if (options.source === "package" && options.git) {
+    throw new Error(`--source package cannot be combined with --git`);
   }
 }
 
-export async function main(argv) {
+function printSummary(result, output) {
+  const countsByAgent = Object.entries(result.summary.agents).map(([agent, counts]) => {
+    const details = listAssetKindNames()
+      .map((kindName) => `${kindName}(${counts[kindName] ?? 0})`)
+      .join(", ");
+    return `- ${agent}: ${details}`;
+  });
+
+  writeLine(
+    output,
+    `Install completed
+Scope: ${result.summary.scope}
+Mode: ${result.summary.mode}`,
+  );
+
+  for (const line of countsByAgent) {
+    writeLine(output, line);
+  }
+}
+
+export async function main(argv, context = {}) {
   const parsed = parseArgs(argv);
+  const input = context.stdin ?? process.stdin;
+  const output = context.stdout ?? process.stdout;
+  const install = context.runInstall ?? runInstall;
+  const prompt = context.promptInstallOptions ?? promptInstallOptions;
+  const resolveSource = context.resolveInstallSource ?? resolveInstallSource;
+  const sourceRoot = context.sourceRoot ?? packageRootFromModule();
+  const projectRoot = context.projectRoot ?? process.cwd();
 
   if (parsed.command === "help") {
-    printHelp();
+    printHelp(output);
     return;
   }
 
@@ -128,15 +182,26 @@ export async function main(argv) {
     throw new Error(`Unsupported command: ${parsed.command}`);
   }
 
-  validateOptions(parsed.options);
+  const options =
+    !parsed.hasExplicitOptions && isInteractiveTerminal(input, output)
+      ? await prompt({ defaults: parsed.options, input, output })
+      : parsed.options;
 
-  const sourceRoot = packageRootFromModule();
-  const projectRoot = process.cwd();
-  const result = await runInstall({
-    ...parsed.options,
-    sourceRoot,
-    projectRoot,
+  validateOptions(options, parsed.explicitOptions);
+
+  const resolvedSource = await resolveSource(options, {
+    defaultSourceRoot: sourceRoot,
   });
 
-  printSummary(result);
+  try {
+    const result = await install({
+      ...resolvedSource.resolvedOptions,
+      sourceRoot: resolvedSource.sourceRoot,
+      projectRoot,
+    });
+
+    printSummary(result, output);
+  } finally {
+    await resolvedSource.cleanup();
+  }
 }
