@@ -4,7 +4,7 @@
 
 ```ts
 // api/request/index.ts — 单例实例
-const jcRequest = new JcRequest({ baseURL: '/api' })
+const jcRequest = new ClientRequest({ baseURL: '/apis' })
 export default jcRequest
 ```
 

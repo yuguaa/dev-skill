@@ -23,12 +23,6 @@
 - `skills/vue3-vue-file-template`
 - `commands/git`
 
-其中：
-
-- `git` 提供 Git 工作流与常见命令聚合入口
-- `git-commit` 提供独立的中文 Conventional Commits 提交信息生成能力
-- 一组前端规范类 skill 来自 `jieci0825/skills` 的 `standards/*`
-
 ## Skill 定位
 
 ### git
