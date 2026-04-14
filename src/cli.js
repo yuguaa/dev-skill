@@ -15,9 +15,10 @@ function packageRootFromModule() {
 }
 
 function printHelp() {
-  console.log(`dev-kit
+  console.log(`@yugu/dev-kit
 
 Usage:
+  pnpm dlx @yugu/dev-kit install [options]
   dev-kit install [options]
 
 Options:

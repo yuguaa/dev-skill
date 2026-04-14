@@ -1,7 +1,7 @@
 {
-  "name": "dev-kit",
+  "name": "@yugu/dev-kit",
   "version": "0.1.0",
-  "description": "Custom installer for dev-kit assets across Codex and Claude.",
+  "description": "Custom installer for @yugu/dev-kit assets across Codex and Claude.",
   "type": "module",
   "bin": {
     "dev-kit": "./bin/dev-kit.js"

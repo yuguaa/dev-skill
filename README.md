@@ -1,4 +1,4 @@
-# Dev Kit
+# @yugu/dev-kit
 
 一个面向 Codex 与 Claude 的开发工具箱仓库。
 
@@ -23,35 +23,13 @@
 - `skills/vue3-vue-file-template`
 - `commands/git`
 
-## Skill 定位
-
-### git
-
-适合所有泛 Git 场景，偏“总入口”：
-
-- 分支策略
-- rebase / stash / undo / conflict
-- 常见 Git 命令速查
-- Git 提交规范入口
-
-如果你不确定该用哪个 Git skill，默认用 `git`。
-
-### git-commit
-
-适合单一高频场景，偏“专精工具”：
-
-- 根据当前改动生成提交信息
-- 输出中文 Conventional Commits 标题
-- 在需要时补充 2 到 5 条中文变更说明
-
-如果用户明确是在问“帮我写 commit message”，优先用 `git-commit`。
 
 ## 安装
 
 主入口：
 
 ```bash
-pnpm dlx dev-kit install
+pnpm dlx @yugu/dev-kit install
 ```
 
 也支持从 Git 直接执行，只要包入口能被 `pnpm dlx` 拉起即可。
@@ -71,31 +49,31 @@ pnpm dlx dev-kit install
 安装全部内容到全局：
 
 ```bash
-pnpm dlx dev-kit install
+pnpm dlx @yugu/dev-kit install
 ```
 
 只安装 skills：
 
 ```bash
-pnpm dlx dev-kit install --types skills
+pnpm dlx @yugu/dev-kit install --types skills
 ```
 
 只安装到 Codex：
 
 ```bash
-pnpm dlx dev-kit install --agent codex
+pnpm dlx @yugu/dev-kit install --agent codex
 ```
 
 安装到当前项目：
 
 ```bash
-pnpm dlx dev-kit install --scope project
+pnpm dlx @yugu/dev-kit install --scope project
 ```
 
 强制复制而不是软链接：
 
 ```bash
-pnpm dlx dev-kit install --mode copy
+pnpm dlx @yugu/dev-kit install --mode copy
 ```
 
 ## 目标目录
