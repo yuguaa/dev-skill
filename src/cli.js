@@ -50,10 +50,24 @@ Options:
 }
 
 function parseArgs(argv) {
-  const [command, ...rest] = argv;
+  const firstToken = argv[0];
 
-  if (!command || command === "--help" || command === "-h") {
+  if (firstToken === "--help" || firstToken === "-h") {
     return { command: "help" };
+  }
+
+  let command;
+  let rest;
+
+  if (!firstToken) {
+    command = undefined;
+    rest = [];
+  } else if (firstToken.startsWith("--")) {
+    command = "install";
+    rest = argv;
+  } else {
+    command = firstToken;
+    rest = argv.slice(1);
   }
 
   const options = {
@@ -178,7 +192,14 @@ export async function main(argv, context = {}) {
     return;
   }
 
-  if (parsed.command !== "install") {
+  if (!parsed.command) {
+    if (!isInteractiveTerminal(input, output)) {
+      printHelp(output);
+      return;
+    }
+  }
+
+  if (parsed.command && parsed.command !== "install") {
     throw new Error(`Unsupported command: ${parsed.command}`);
   }
 
