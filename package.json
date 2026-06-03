@@ -1,7 +1,7 @@
 {
-  "name": "@yugu/dev-kit",
+  "name": "dev-skill",
   "version": "0.2.0",
-  "description": "Skills-native development kit for Codex and Claude.",
+  "description": "Skills-native development skills for Codex and Claude.",
   "private": true,
   "type": "module"
 }
