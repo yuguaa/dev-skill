@@ -1,24 +1,7 @@
 {
   "name": "@yugu/dev-kit",
-  "version": "0.1.2",
-  "description": "Custom installer for @yugu/dev-kit assets across Codex and Claude.",
-  "type": "module",
-  "bin": {
-    "dev-kit": "./bin/dev-kit.js"
-  },
-  "files": [
-    "bin",
-    "src",
-    "skills",
-    "commands",
-    "rules",
-    "README.md"
-  ],
-  "scripts": {
-    "test": "node --test"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "packageManager": "pnpm@10.8.1"
+  "version": "0.2.0",
+  "description": "Skills-native development kit for Codex and Claude.",
+  "private": true,
+  "type": "module"
 }
